@@ -1,10 +1,9 @@
 # coding:utf8
 # author:dinghai
 # created on 2017-10-02 11:15
-import functools
+import functools, json
 from ermiaoweb.core import http
 from wsgiref.simple_server import make_server
-from cgi import parse_qs
 
 route_mappings = {}
 middleware_mapping = {http.MiddlewareType.Request: {}, http.MiddlewareType.Response: {}}
@@ -39,25 +38,54 @@ class App(object):
             # bytes = [str(environ).encode("utf8")]
 
             handler = find_matched_handler(environ)
-            response = handler()
-            bytes = [response.encode('utf8')]
+            request = parse_request_data(environ)
+            response = handler(request)
 
+            response_string = generate_response(response)
+            bytes = [response_string.encode('utf8')]
             start_response('200 OK', [('Content-Type', 'text/html')])
             return bytes
 
         def parse_request_data(environ):
+            request = http.Request()
+            # request method
             request_method = environ['REQUEST_METHOD']
+            request.parse_request_method(request_method)
+
+            # url
             url = environ["PATH_INFO"]
-            request_body_size = int(environ.get('CONTENT_LENGTH'))
-            query_string =environ.get('QUERY_STRING','')
-            if not query_string == '':
-                pass
+            request.url = url
 
+            # headers
+            # TODO
+            content_type = environ.get('CONTENT_TYPE', '')
+            request.headers["CONTENT_TYPE"] = content_type
 
-            return ""
+            # cookies
+            cookies_string = environ.get('HTTP_COOKIE', '')
+            request.parse_cookies(cookies_string)
+
+            # url 上的数据
+            query_string = environ.get('QUERY_STRING', '')
+            request.parse_query_string(query_string)
+
+            # request body
+            content_length = 0
+            if not environ.get('CONTENT_LENGTH') == "":
+                content_length = int(environ.get('CONTENT_LENGTH'))
+            request.content_length = content_length
+            wsgi_input = environ.get('wsgi.input')
+            request.parse_request_body(wsgi_input)
+
+            return request
 
         def generate_response(response):
-            return ""
+            if isinstance(response, str):
+                return response.encode('utf8')
+            if isinstance(response, (dict, list,)):
+                return json.dumps(response)
+            if isinstance(response, object):
+                return json.dumps(response.__dict__)
 
         # 根据url以及route_mapping找出匹配的function
         def find_matched_handler(environ):
@@ -85,11 +113,22 @@ class App(object):
         def find_after_middlewares(environ):
             return ""
 
+        def parse_cookies(cookies_string):
+            cookies_dict = {}
+            cookies_array = cookies_string.split(";")
+            for cookie in cookies_array:
+                name_value_pairs = cookie.split("=")
+                name = name_value_pairs[0]
+                value = name_value_pairs[1]
+                if name not in cookies_dict.keys():
+                    cookies_dict[name] = value
+            return cookies_dict
+
         httpd = make_server('', 8000, application)
         httpd.serve_forever()
 
 
-def route(url, *, methods=(http.HttpMethod.GET,)):
+def route(url, *, methods=(http.HttpMethod.GET,), name=None):
     """
     :param url:
     :param methods:

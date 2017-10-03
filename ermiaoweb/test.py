@@ -7,15 +7,37 @@ from ermiaoweb.core.http import MiddlewareType
 
 
 @app.route('/index', methods=(method.GET, method.POST,))
-def index():
-    #print("index")
-    return "hello world"
+def test_return_string(request):
+    # print("index")
+    string_return = ""
+    for key, values in request.query_dict.items():
+        _temp_str = "%s" % key
+        for value in values:
+            _temp_str += ": %s " % value
+        string_return += _temp_str
+
+    for cookie_name, cookie_value in request.cookies.items():
+        print(cookie_name, ":", cookie_value)
+    return string_return + "<br>" + str(request.payload) + "<br>" + str(request.cookies)
+
+
+@app.route('/test_object')
+def test_return_object(request):
+    class Person:
+        def __init__(self, names, age):
+            self.names = names
+            self.age = age
+
+    names = request.query_dict.get("name", [''])
+    age = request.query_dict.get("age", [0])
+    return Person(names, age)
 
 
 @app.route('/echo')
-def echo():
-    print("echo")
-
+def test_return_dict(request):
+    names = request.query_dict.get("name")
+    age = request.query_dict.get("age", 0)
+    return {"names": names, "age": age}
 
 
 @app.middleware('/index')
