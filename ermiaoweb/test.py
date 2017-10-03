@@ -41,13 +41,39 @@ def test_return_dict(request):
 
 
 @app.middleware('/index')
-def middleware_index(request):
-    print("middleware index")
+def middleware_index_1(request):
+    print("middleware index 1")
+    return True
 
 
-@app.middleware('/echo', methods=(method.POST, method.GET), type=MiddlewareType.Request)
+@app.middleware('/index')
+def middleware_index_2(request):
+    print("middleware index 2")
+    return True
+
+
+@app.middleware('/index')
+def middleware_index_3(request):
+    print("middleware index 3")
+    return True
+
+
+@app.middleware('/index', methods=(method.GET, method.POST,))
+def middleware_index_4(request):
+    print("middleware index 4")
+    return True
+
+
+@app.middleware('/echo', methods=(method.POST, method.GET), http_type=MiddlewareType.Request)
 def middleware_echo(response):
     print("middleware echo")
+    return True
+
+
+@app.middleware('/echo', methods=(method.POST, method.GET), http_type=MiddlewareType.Response)
+def middleware_echo_response(response):
+    print("middleware_echo_response")
+    return True
 
 
 if __name__ == "__main__":

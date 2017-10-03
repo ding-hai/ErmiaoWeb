@@ -6,7 +6,7 @@ from ermiaoweb.core import http
 from wsgiref.simple_server import make_server
 
 route_mappings = {}
-middleware_mapping = {http.MiddlewareType.Request: {}, http.MiddlewareType.Response: {}}
+middleware_mapping = {http.MiddlewareType.Request.name: {}, http.MiddlewareType.Response.name: {}}
 
 
 # 单例模式
@@ -38,10 +38,26 @@ class App(object):
             # bytes = [str(environ).encode("utf8")]
 
             handler = find_matched_handler(environ)
+            request_middleware_list = find_matched_middlewares(environ, http_type=http.MiddlewareType.Request)
+            response_middleware_list = find_matched_middlewares(environ, http_type=http.MiddlewareType.Response)
+
             request = parse_request_data(environ)
+            if not len(request_middleware_list) == 0:
+                for middleware_handler in request_middleware_list:
+                    if not middleware_handler(request):
+                        start_response('403 Forbidden', [('Content-Type', 'text/html')])
+                        return [b"ERROR"]
+
             response = handler(request)
 
             response_string = generate_response(response)
+
+            if not len(request_middleware_list) == 0:
+                for middleware_handler in response_middleware_list:
+                    if not middleware_handler(response):
+                        start_response('403 Forbidden', [('Content-Type', 'text/html')])
+                        return [b"ERROR"]
+
             bytes = [response_string.encode('utf8')]
             start_response('200 OK', [('Content-Type', 'text/html')])
             return bytes
@@ -81,7 +97,7 @@ class App(object):
 
         def generate_response(response):
             if isinstance(response, str):
-                return response.encode('utf8')
+                return response
             if isinstance(response, (dict, list,)):
                 return json.dumps(response)
             if isinstance(response, object):
@@ -107,11 +123,24 @@ class App(object):
             except KeyError:
                 print("no matched handler")
 
-        def find_before_middlewares(environ):
-            return ""
+        def find_matched_middlewares(environ, http_type=http.MiddlewareType.Request):
+            url = environ.get('PATH_INFO', '/')
+            method = environ.get("REQUEST_METHOD", "GET")
+            # print(method, url)
+            if method == 'GET':
+                method = http.HttpMethod.GET
+            elif method == 'POST':
+                method = http.HttpMethod.POST
+            else:
+                pass
 
-        def find_after_middlewares(environ):
-            return ""
+            try:
+                middlewares = middleware_mapping[http_type.name][url][method.name]
+                print(middlewares)
+                return middlewares
+            except KeyError:
+                print("no matched middleware")
+                return []
 
         def parse_cookies(cookies_string):
             cookies_dict = {}
@@ -153,15 +182,16 @@ def route(url, *, methods=(http.HttpMethod.GET,), name=None):
     return wrapper
 
 
-def middleware(url, *, methods=(http.HttpMethod.GET,), type=http.MiddlewareType.Request):
+def middleware(url, *, methods=(http.HttpMethod.GET,), http_type=http.MiddlewareType.Request):
     # 类似route
     def wrapper(fun):
         # 注册中间件
-        method_and_func = {}
         for method in methods:
-            method_and_func[method.name] = fun
-
-        middleware_mapping[type][url] = method_and_func
+            method_funcs = middleware_mapping[http_type.name].get(url, {})
+            func_list = method_funcs.get(method.name, [])
+            func_list.append(fun)
+            method_funcs[method.name] = func_list
+            middleware_mapping[http_type.name][url] = method_funcs
 
         @functools.wraps(fun)
         def decorator(*args, **kwargs):
@@ -171,7 +201,3 @@ def middleware(url, *, methods=(http.HttpMethod.GET,), type=http.MiddlewareType.
         return decorator
 
     return wrapper
-
-
-def pasrse_request():
-    pass
