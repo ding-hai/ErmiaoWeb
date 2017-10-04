@@ -16,7 +16,7 @@ def parse_request_data(environ):
     request.url = url
 
     # headers
-    # TODO
+    # TODO header补全
     content_type = environ.get('CONTENT_TYPE', '')
     request.headers["CONTENT_TYPE"] = content_type
 
@@ -30,7 +30,7 @@ def parse_request_data(environ):
 
     # request body
     content_length = 0
-    if not environ.get('CONTENT_LENGTH') == "":
+    if not environ.get('CONTENT_LENGTH','') == "":
         content_length = int(environ.get('CONTENT_LENGTH'))
     request.content_length = content_length
     wsgi_input = environ.get('wsgi.input')

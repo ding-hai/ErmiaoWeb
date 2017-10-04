@@ -21,53 +21,53 @@ class App(object):
         # 调用对应的处理函数
         # 调用后置中间件
         # 将设置的响应数据转化为原生的http响应
-
-
-        def application(environ, start_response):
-            # handler = find_matched_handler(environ)
-            # before_middleware_list = find_before_middlewares(environ)
-            # after_middleware_list = find_after_middlewares(environ)
-            #
-            # request = parse_request_data(environ)
-            # for middleware in before_middleware_list:
-            #     if not middleware(request):
-            #         break
-
-            # response = handler(request)
-            # for middleware in after_middleware_list:
-            #     middleware(request)
-            # bytes = generate_response(response)
-            # bytes = [str(environ).encode("utf8")]
-
-            handler = find_matched_handler(environ, route_mappings)
-            request_middleware_list = find_matched_middleware_list(environ, middleware_mapping,
-                                                                   http_type=http.MiddlewareType.Request)
-            response_middleware_list = find_matched_middleware_list(environ, middleware_mapping,
-                                                                    http_type=http.MiddlewareType.Response)
-
-            request = parse_request_data(environ)
-            if not len(request_middleware_list) == 0:
-                for middleware_handler in request_middleware_list:
-                    if not middleware_handler(request):
-                        start_response('403 Forbidden', [('Content-Type', 'text/html')])
-                        return [b"ERROR"]
-
-            response = handler(request)
-
-            response_string = generate_response(response)
-
-            if not len(request_middleware_list) == 0:
-                for middleware_handler in response_middleware_list:
-                    if not middleware_handler(response):
-                        start_response('403 Forbidden', [('Content-Type', 'text/html')])
-                        return [b"ERROR"]
-
-            bytes = [response_string.encode('utf8')]
-            start_response('200 OK', [('Content-Type', 'text/html')])
-            return bytes
-
-        httpd = make_server('', 8000, application)
+        httpd = make_server('', 8080, application)
         httpd.serve_forever()
+
+
+def application(environ,  start_response):
+    # print(environ)
+    # handler = find_matched_handler(environ)
+    # before_middleware_list = find_before_middlewares(environ)
+    # after_middleware_list = find_after_middlewares(environ)
+    #
+    # request = parse_request_data(environ)
+    # for middleware in before_middleware_list:
+    #     if not middleware(request):
+    #         break
+
+    # response = handler(request)
+    # for middleware in after_middleware_list:
+    #     middleware(request)
+    # bytes = generate_response(response)
+    # bytes = [str(environ).encode("utf8")]
+
+    handler = find_matched_handler(environ, route_mappings)
+    request_middleware_list = find_matched_middleware_list(environ, middleware_mapping,
+                                                           http_type=http.MiddlewareType.Request)
+    response_middleware_list = find_matched_middleware_list(environ, middleware_mapping,
+                                                            http_type=http.MiddlewareType.Response)
+
+    request = parse_request_data(environ)
+    if not len(request_middleware_list) == 0:
+        for middleware_handler in request_middleware_list:
+            if not middleware_handler(request):
+                start_response('403 Forbidden', [('Content-Type', 'text/html')])
+                return [b"ERROR"]
+
+    response = handler(request)
+
+    response_string = generate_response(response)
+
+    if not len(request_middleware_list) == 0:
+        for middleware_handler in response_middleware_list:
+            if not middleware_handler(response):
+                start_response('403 Forbidden', [('Content-Type', 'text/html')])
+                return [b"ERROR"]
+
+    bytes = [response_string.encode('utf8')]
+    start_response('200 OK', [('Content-Type', 'text/html')])
+    return bytes
 
 
 def route(url, *, methods=(http.HttpMethod.GET,), name=None):

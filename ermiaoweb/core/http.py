@@ -22,7 +22,7 @@ class Request:
         self.headers = {}
         self.form = form_dict
         self.query_dict = query_dict
-        self.files = []
+        self.files = []  # TODO 文件上传支持
         self.payload = payload
         self.content_length = content_length
 
@@ -64,10 +64,12 @@ class Request:
         self.payload = payload
 
 
+# TODO response面向对象
 class Response:
     pass
 
 
+# TODO Cookie设置
 class Cookie(object):
     def __init__(self, name, value, expires=10):
         self.name = name

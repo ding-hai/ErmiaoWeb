@@ -1,0 +1,25 @@
+0x00 安装uwsgi，提供了一个可以使用的configure script
+    如下：
+    [uwsgi]
+    socket = 127.0.0.1:8000
+    chdir = /store/projects/PycharmProjects/projects/ErmiaoWeb/
+    module = test
+    processes = 12
+    threads = 4
+    enable-threads = True
+    buffer-size = 21573
+    stats = 127.0.0.1:9000
+    req-logger = file:/dev/null
+    logger = file:/dev/null
+
+0x01 安装nginx，在/etc/nginx/conf.d/下创建test.conf文件，写入server配置
+    如下：
+    server{
+            listen  80;
+            server_name  127.0.0.1;
+            location / {
+              include   /etc/nginx/uwsgi_params;
+              uwsgi_pass    127.0.0.1:8000;
+            }
+
+        }
