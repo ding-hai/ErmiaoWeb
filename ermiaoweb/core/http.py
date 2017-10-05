@@ -52,16 +52,39 @@ class Request:
         else:
             self.method = HttpMethod.GET
 
-    def parse_request_body(self, wsgi_input):
-        request_body = wsgi_input.read(self.content_length).decode('UTF8')
+    def parse_request_body(self, environ):
+        content_length = 0
+        if not environ.get('CONTENT_LENGTH', '') == "":
+            content_length = int(environ.get('CONTENT_LENGTH'))
+        self.content_length = content_length
+        wsgi_input = environ.get('wsgi.input')
         content_type = self.headers['CONTENT_TYPE']
         payload = {}
         if content_type == 'application/x-www-form-urlencoded':
+            request_body = wsgi_input.read(self.content_length).decode('UTF8')
             payload = parse_qs(request_body)
         elif content_type == 'application/json':
+            request_body = wsgi_input.read(self.content_length).decode('UTF8')
             payload = json.loads(request_body)
 
         self.payload = payload
+
+    # def parse_request_files(self, environ):
+    #     content_type = self.headers['CONTENT_TYPE']
+    #     content_type_boundary = content_type.split(';')
+    #     if len(content_type_boundary) >= 2:
+    #         content_type = content_type_boundary[0]
+    #         boundary = content_type_boundary[1]
+    #     content_length = self.content_length
+    #     if content_type == 'multipart/form-data':
+    #         wsgi_input = environ.get('wsgi.input', '')
+    #         if not wsgi_input == '':
+    #             bytes = wsgi_input.read(content_length)
+    #             with open('./test', 'wb') as file:
+    #                 file.write(bytes)
+
+    def set_file(self, file_list):
+        self.files = file_list
 
 
 # TODO response面向对象
@@ -76,7 +99,6 @@ class Response:
 
     def set_cookie(self, cookies):
         pass
-
 
 
 # TODO Cookie设置

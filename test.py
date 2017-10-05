@@ -2,31 +2,39 @@
 # author:dinghai
 # created on 2017-10-02 11:12
 from ermiaoweb.core import app
-from ermiaoweb.utils.tools import rend_template
+from ermiaoweb.core.app import rend_template
 from ermiaoweb.core.http import HttpMethod as method
 from ermiaoweb.core.http import MiddlewareType
 
-application = app.application
+import json
+
+
+# application = app.application #部署在uwsgi上需要取消注释，使用自导的服务器则不需要
 
 
 @app.route('/')
 def index(request):
-    return rend_template('index.html', context_dict={"name": "dinghai"})
+    class P:
+        def __init__(self, name, age):
+            self.name = name
+            self.age = age
+
+    p = P("丁海", 21)
+    skills = ["Java", "Python", "Git", "RPC", "分布式"]
+    return rend_template('index.html', context_dict={"dinghai": p, "skills": skills})
+
+
+@app.route('/fileupload', methods=(method.POST,))
+def file_handler(request):
+    # for file in request.files:
+    #     pass
+
+    return "success!"
 
 
 @app.route('/index', methods=(method.GET, method.POST,))
-def test_return_string(request):
-    # print("index")
-    string_return = ""
-    for key, values in request.query_dict.items():
-        _temp_str = "%s" % key
-        for value in values:
-            _temp_str += ": %s " % value
-        string_return += _temp_str
-
-    for cookie_name, cookie_value in request.cookies.items():
-        print(cookie_name, ":", cookie_value)
-    return string_return + "<br>" + str(request.payload) + "<br>" + str(request.cookies)
+def test_return_dict(request):
+    return {"query_dict": request.query_dict, "cookies": request.cookies, "payoad": request.payload}
 
 
 @app.route('/test_object')
@@ -42,7 +50,7 @@ def test_return_object(request):
 
 
 @app.route('/echo')
-def test_return_dict(request):
+def test_return_dict_2(request):
     names = request.query_dict.get("name")
     age = request.query_dict.get("age", 0)
     return {"names": names, "age": age}
@@ -60,16 +68,12 @@ def middleware_index_2(request):
     return True
 
 
-@app.middleware('/index')
-def middleware_index_3(request):
-    # print("middleware index 3")
-    return True
-
-
-@app.middleware('/index', methods=(method.GET, method.POST,))
-def middleware_index_4(request):
-    # print("middleware index 4")
-    return True
+@app.middleware('/index', methods=(method.GET, method.POST,), http_type=MiddlewareType.Response)
+def middleware_index_4(response):
+    if isinstance(response, (dict, list,)):
+        return json.dumps(response)
+    if isinstance(response, object):
+        return json.dumps(response.__dict__)
 
 
 @app.middleware('/echo', methods=(method.POST, method.GET), http_type=MiddlewareType.Request)
@@ -95,7 +99,7 @@ if __name__ == "__main__":
                 print(item)
 
 
-    test_route_register()
+    #test_route_register()
 
 
     def test_middleware_register():
@@ -108,6 +112,6 @@ if __name__ == "__main__":
                     print(method, func)
 
 
-    test_middleware_register()
+    #test_middleware_register()
     app = app.App()
     app.run()
