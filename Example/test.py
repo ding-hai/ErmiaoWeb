@@ -1,24 +1,3 @@
-# ErmiaoWeb
-a python3 web framework based on wsgiref named after my GF
-
-### 第三方依赖
-1. Jinja2
-
-
-
-## Finished
-1. 基于装饰器的route注册   初步完成 2017/10/3
-2. 请求数据解析 完成url请求数据，form数据,请求体中的文本数据解析初步完成
-3. 基于装饰器的中间件[前置中间件与后置中间件] 初步完成 2017/10/4
-4. 模板系统
-## TODO
-1. 文件上传
-2. 异常处理机制
-3. 文档
-4. 牛逼的定位
-
-## Example
-```Python
 # coding:utf8
 # author:dinghai
 # created on 2017-10-05 17:10
@@ -78,6 +57,3 @@ def to_json(response):
 
 server = app.App()
 server.run()
-
-
-```

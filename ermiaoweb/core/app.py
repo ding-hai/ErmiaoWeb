@@ -71,16 +71,16 @@ def route(url, *, methods=(http.HttpMethod.GET,)):
     return wrapper
 
 
-def middleware(url, *, methods=(http.HttpMethod.GET,), http_type=http.MiddlewareType.Request):
+def middleware(url, *, methods=(http.HttpMethod.GET,), middleware_type=http.MiddlewareType.Request):
     # 类似route
     def wrapper(fun):
         # 注册中间件
         for method in methods:
-            method_funcs = middleware_mapping[http_type.name].get(url, {})
+            method_funcs = middleware_mapping[middleware_type.name].get(url, {})
             func_list = method_funcs.get(method.name, [])
             func_list.append(fun)
             method_funcs[method.name] = func_list
-            middleware_mapping[http_type.name][url] = method_funcs
+            middleware_mapping[middleware_type.name][url] = method_funcs
 
         @functools.wraps(fun)
         def decorator(*args, **kwargs):
