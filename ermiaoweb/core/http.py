@@ -66,7 +66,17 @@ class Request:
 
 # TODO response面向对象
 class Response:
-    pass
+    def __init__(self):
+        self.status_code = 200
+        self.headers = []
+        self.body = ""
+
+    def set_cookie(self, name, value):
+        pass
+
+    def set_cookie(self, cookies):
+        pass
+
 
 
 # TODO Cookie设置

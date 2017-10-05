@@ -21,11 +21,11 @@ class App(object):
         # 调用对应的处理函数
         # 调用后置中间件
         # 将设置的响应数据转化为原生的http响应
-        httpd = make_server('', 8080, application)
+        httpd = make_server('', 8000, application)
         httpd.serve_forever()
 
 
-def application(environ,  start_response):
+def application(environ, start_response):
     # print(environ)
     # handler = find_matched_handler(environ)
     # before_middleware_list = find_before_middlewares(environ)
@@ -57,13 +57,13 @@ def application(environ,  start_response):
 
     response = handler(request)
 
-    response_string = generate_response(response)
-
     if not len(request_middleware_list) == 0:
         for middleware_handler in response_middleware_list:
             if not middleware_handler(response):
                 start_response('403 Forbidden', [('Content-Type', 'text/html')])
                 return [b"ERROR"]
+
+    response_string = generate_response(response)
 
     bytes = [response_string.encode('utf8')]
     start_response('200 OK', [('Content-Type', 'text/html')])

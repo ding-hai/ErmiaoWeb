@@ -1,8 +1,9 @@
 # coding:utf8
 # author:dinghai
 # created on 2017-10-03 21:06
-import json
+import json, os
 from ermiaoweb.core import http
+from jinja2 import Template
 
 
 def parse_request_data(environ):
@@ -30,7 +31,7 @@ def parse_request_data(environ):
 
     # request body
     content_length = 0
-    if not environ.get('CONTENT_LENGTH','') == "":
+    if not environ.get('CONTENT_LENGTH', '') == "":
         content_length = int(environ.get('CONTENT_LENGTH'))
     request.content_length = content_length
     wsgi_input = environ.get('wsgi.input')
@@ -87,3 +88,15 @@ def find_matched_middleware_list(environ, middleware_mapping, http_type=http.Mid
     except KeyError:
         print("no matched middleware")
         return []
+
+
+def rend_template(path, *, context_dict):
+    path = os.path.abspath(path)
+    with open(path, 'r') as file:
+        html_string = ''
+        for line in file.readlines():
+            html_string += line
+
+        template = Template(html_string)
+        render_string = template.render(context_dict)
+    return render_string

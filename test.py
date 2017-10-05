@@ -2,10 +2,16 @@
 # author:dinghai
 # created on 2017-10-02 11:12
 from ermiaoweb.core import app
+from ermiaoweb.utils.tools import rend_template
 from ermiaoweb.core.http import HttpMethod as method
 from ermiaoweb.core.http import MiddlewareType
 
 application = app.application
+
+
+@app.route('/')
+def index(request):
+    return rend_template('index.html', context_dict={"name": "dinghai"})
 
 
 @app.route('/index', methods=(method.GET, method.POST,))
